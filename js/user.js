@@ -8,7 +8,7 @@
   window.RELATIONSHIP_TYPES = {
     lifelong: { key: 'lifelong', name: 'Lifelong Relationship', emoji: '💫' },
     partner: { key: 'partner', name: 'The Best Partner', emoji: '🤝' },
-    friend: { key: 'friend', name: 'Sincere Friend', emoji: '🤝' },
+    friend: { key: 'friend', name: 'Sincere Friend', emoji: '👭' },
     communication: { key: 'communication', name: 'Further Communication', emoji: '💬' }
   };
 
