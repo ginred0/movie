@@ -580,10 +580,40 @@
     
     const user = window.currentUser;
     
+    // 获取当前头像类型（用于预选）
+    const currentAvatarType = (user.avatar && user.avatar.type !== 'default') ? user.avatar.type : '';
+    
     // 创建编辑表单HTML
     const editFormHtml = `
       <div style="max-width: 500px; margin: 0 auto;">
         <h3 style="text-align: center; margin-bottom: 20px;">编辑资料</h3>
+        
+        <!-- 头像选择 -->
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 8px; color: #d4af37;">头像</label>
+          <small style="display: block; margin-bottom: 10px; color: #888; font-size: 12px;">点击选择emoji头像，或留空使用首字母头像</small>
+          <div class="avatar-selector" id="editAvatarSelector" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 12px; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+            <div class="avatar-option ${currentAvatarType === 'wave' ? 'selected' : ''}" data-avatar="wave" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">🌊</div>
+            <div class="avatar-option ${currentAvatarType === 'tomato' ? 'selected' : ''}" data-avatar="tomato" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">🍅</div>
+            <div class="avatar-option ${currentAvatarType === 'lightning' ? 'selected' : ''}" data-avatar="lightning" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">⚡</div>
+            <div class="avatar-option ${currentAvatarType === 'star' ? 'selected' : ''}" data-avatar="star" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">⭐</div>
+            <div class="avatar-option ${currentAvatarType === 'saturn' ? 'selected' : ''}" data-avatar="saturn" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">🪐</div>
+            <div class="avatar-option ${currentAvatarType === 'comet' ? 'selected' : ''}" data-avatar="comet" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">☄️</div>
+            <div class="avatar-option ${currentAvatarType === 'alien' ? 'selected' : ''}" data-avatar="alien" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">👽</div>
+            <div class="avatar-option ${currentAvatarType === 'devil' ? 'selected' : ''}" data-avatar="devil" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">👿</div>
+            <div class="avatar-option ${currentAvatarType === 'wing' ? 'selected' : ''}" data-avatar="wing" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">🪽</div>
+            <div class="avatar-option ${currentAvatarType === 'potato' ? 'selected' : ''}" data-avatar="potato" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; background: rgba(255,255,255,0.05); transition: all 0.3s ease;">🥔</div>
+          </div>
+          <input type="hidden" id="editSelectedAvatar" value="${currentAvatarType}" />
+        </div>
+        
+        <!-- 昵称 -->
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; color: #d4af37;">昵称</label>
+          <input type="text" id="editNickname" value="${user.nickname || ''}" 
+                 style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #f5f5f5; font-size: 14px;" />
+          <small style="display: block; margin-top: 5px; color: #888; font-size: 12px;">修改昵称将影响首字母头像显示</small>
+        </div>
         
         <div style="margin-bottom: 15px;">
           <label style="display: block; margin-bottom: 5px; color: #d4af37;">最喜欢的女导演</label>
@@ -619,17 +649,86 @@
     document.getElementById('userContent').innerHTML = editFormHtml;
     document.getElementById('userModalOverlay').classList.add('active');
     document.getElementById('userModal').classList.add('active');
+    
+    // 初始化头像选择器交互
+    initEditAvatarSelector();
+  }
+  
+  // 初始化编辑页面的头像选择器
+  function initEditAvatarSelector(){
+    const avatarOptions = document.querySelectorAll('#editAvatarSelector .avatar-option');
+    const selectedInput = document.getElementById('editSelectedAvatar');
+    
+    if (!avatarOptions || !selectedInput) return;
+    
+    avatarOptions.forEach(option => {
+      option.addEventListener('click', function(){
+        // 移除所有选中状态
+        avatarOptions.forEach(opt => opt.classList.remove('selected'));
+        // 添加当前选中
+        this.classList.add('selected');
+        selectedInput.value = this.getAttribute('data-avatar');
+      });
+      
+      // 双击取消选择（回到首字母头像）
+      option.addEventListener('dblclick', function(){
+        avatarOptions.forEach(opt => opt.classList.remove('selected'));
+        selectedInput.value = '';
+      });
+    });
   }
   
   window.saveProfileEdit = async function(){
     if (!window.currentUser) return;
     
+    const nickname = document.getElementById('editNickname').value.trim();
+    const selectedAvatarType = document.getElementById('editSelectedAvatar').value.trim();
     const director = document.getElementById('editDirector').value.trim();
     const film = document.getElementById('editFilm').value.trim();
     const recentFilm = document.getElementById('editRecentFilm').value.trim();
     const thoughts = document.getElementById('editThoughts').value.trim();
     
+    // 验证昵称
+    if (!nickname) {
+      alert('昵称不能为空');
+      return;
+    }
+    
+    // 如果修改了昵称，检查是否与其他用户重复
+    if (nickname !== window.currentUser.nickname) {
+      const existingUser = await window.getUserByNickname(nickname);
+      if (existingUser && existingUser.id !== window.currentUser.id) {
+        alert('昵称已被使用，请换一个');
+        return;
+      }
+    }
+    
     const updateData = {};
+    
+    // 检查昵称变化
+    if (nickname !== window.currentUser.nickname) {
+      updateData.nickname = nickname;
+    }
+    
+    // 检查头像变化
+    const currentAvatarType = (window.currentUser.avatar && window.currentUser.avatar.type !== 'default') 
+      ? window.currentUser.avatar.type : '';
+    
+    if (selectedAvatarType !== currentAvatarType) {
+      // 如果选择了emoji头像
+      if (selectedAvatarType) {
+        updateData.avatar = { type: selectedAvatarType };
+      } else {
+        // 如果清空了选择，使用首字母头像
+        updateData.avatar = { 
+          type: 'default', 
+          value: nickname.charAt(0).toUpperCase(), 
+          color: '#d4af37' 
+        };
+      }
+    }
+    
+    // 检查其他字段变化
     if (director !== window.currentUser.favoriteDirector) updateData.favoriteDirector = director;
     if (film !== window.currentUser.favoriteFilm) updateData.favoriteFilm = film;
     if (recentFilm !== window.currentUser.recentFilm) updateData.recentFilm = recentFilm;
@@ -644,12 +743,14 @@
     
     if (success) {
       // 更新本地缓存
+      if (updateData.nickname !== undefined) window.currentUser.nickname = updateData.nickname;
+      if (updateData.avatar !== undefined) window.currentUser.avatar = updateData.avatar;
       if (updateData.favoriteDirector !== undefined) window.currentUser.favoriteDirector = updateData.favoriteDirector;
       if (updateData.favoriteFilm !== undefined) window.currentUser.favoriteFilm = updateData.favoriteFilm;
       if (updateData.recentFilm !== undefined) window.currentUser.recentFilm = updateData.recentFilm;
       if (updateData.thoughts !== undefined) window.currentUser.thoughts = updateData.thoughts;
       
-      // 更新下拉菜单显示
+      // 更新下拉菜单和左上角头像显示
       if (window.updateUserCorner) {
         window.updateUserCorner();
       }
