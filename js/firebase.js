@@ -131,4 +131,111 @@
     return await window.updateUser(id, data);
   }
 
+  // ================= 关系 (Relationships) =================
+  // 创建或更新关系申请（同一对用户只保留一条关系，拒绝后可再次申请）
+  window.createRelationshipRequest = async function(params){
+    if (!window.db) return { ok: false, msg: 'DB 未初始化' };
+    const { fromUserId, toUserId, type, message, fromNickname, toNickname, fromAvatar, toAvatar } = params || {};
+    if (!fromUserId || !toUserId || !type || !message) {
+      return { ok: false, msg: '缺少必要字段' };
+    }
+    showLoading();
+    try {
+      // 查询是否已存在 A-B 或 B-A 关系
+      const q1 = db.collection('relationships')
+        .where('fromUserId','==', fromUserId)
+        .where('toUserId','==', toUserId)
+        .limit(1);
+      const q2 = db.collection('relationships')
+        .where('fromUserId','==', toUserId)
+        .where('toUserId','==', fromUserId)
+        .limit(1);
+      const [s1, s2] = await Promise.all([q1.get(), q2.get()]);
+      const existing = !s1.empty ? s1.docs[0] : (!s2.empty ? s2.docs[0] : null);
+      const existingData = existing ? existing.data() : null;
+      if (existingData && existingData.status === 'accepted') {
+        hideLoading();
+        return { ok: false, msg: '你们已经建立关系，无需重复申请' };
+      }
+
+      const payload = {
+        fromUserId,
+        toUserId,
+        fromNickname: fromNickname || '',
+        toNickname: toNickname || '',
+        fromAvatar: fromAvatar || null,
+        toAvatar: toAvatar || null,
+        type,
+        status: 'pending',
+        message,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        respondedAt: null
+      };
+
+      if (existing) {
+        await existing.ref.update(payload);
+      } else {
+        await db.collection('relationships').add(payload);
+      }
+      hideLoading();
+      return { ok: true };
+    } catch (err) {
+      console.error('[firebase] 创建关系失败', err);
+      hideLoading();
+      return { ok: false, msg: '创建关系失败' };
+    }
+  }
+
+  // 获取与指定用户相关的所有关系（包含自己作为 from 或 to）
+  window.getRelationshipsForUser = async function(userId){
+    if (!window.db || !userId) return [];
+    try {
+      const [a, b] = await Promise.all([
+        db.collection('relationships').where('fromUserId','==',userId).get(),
+        db.collection('relationships').where('toUserId','==',userId).get()
+      ]);
+      const list = [];
+      a.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+      b.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+      return list;
+    } catch (err) {
+      console.error('[firebase] 获取关系失败', err);
+      return [];
+    }
+  }
+
+  // 仅获取待我处理的申请（我是 toUser 且 pending）
+  window.getPendingRelationshipRequests = async function(userId){
+    if (!window.db || !userId) return [];
+    try {
+      const snap = await db.collection('relationships')
+        .where('toUserId','==', userId)
+        .where('status','==','pending')
+        .get();
+      return snap.docs.map(d=>({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error('[firebase] 获取关系申请失败', err);
+      return [];
+    }
+  }
+
+  // 响应申请（接受/拒绝）
+  window.respondRelationship = async function(relId, status){
+    if (!window.db || !relId || !status) return false;
+    if (!['accepted','rejected'].includes(status)) return false;
+    showLoading();
+    try {
+      await db.collection('relationships').doc(relId).update({
+        status,
+        respondedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      hideLoading();
+      return true;
+    } catch (err) {
+      console.error('[firebase] 更新关系失败', err);
+      hideLoading();
+      return false;
+    }
+  }
+
 })();

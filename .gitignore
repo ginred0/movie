@@ -11,3 +11,8 @@ firebase-debug.log
 
 # Local env
 .env
+
+# Sensitive service accounts (do NOT commit)
+movie-2adbd-firebase-adminsdk-*.json
+*.service-account.json
+*.firebase-key.json

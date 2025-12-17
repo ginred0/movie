@@ -4,6 +4,14 @@
   // 当前登录用户信息
   window.currentUser = null;
 
+  // 关系类型配置
+  window.RELATIONSHIP_TYPES = {
+    lifelong: { key: 'lifelong', name: 'Lifelong Relationship', emoji: '💫' },
+    partner: { key: 'partner', name: 'The Best Partner', emoji: '🤝' },
+    friend: { key: 'friend', name: 'Sincere Friend', emoji: '🤝' },
+    communication: { key: 'communication', name: 'Further Communication', emoji: '💬' }
+  };
+
   // ============ 模态框控制 ============
   
   window.showLoginModal = function(){
@@ -317,6 +325,129 @@
         closeUsersSidebar();
       }
     } catch (_) {}
+    // 关系工具函数
+    function resolveRelationLabel(type){
+      const t = window.RELATIONSHIP_TYPES[type];
+      return t ? `${t.emoji} ${t.name}` : type;
+    }
+    
+    function renderRelationshipsSection(relations, viewerId){
+      const list = relations || [];
+      if (!list.length) {
+        return `
+          <div class="user-section">
+            <h3>🤝 关系</h3>
+            <p style="color:#888;">暂无关系</p>
+          </div>
+        `;
+      }
+    
+      const items = list.map(r => {
+        const isFrom = r.fromUserId === viewerId;
+        const otherAvatar = isFrom ? r.toAvatar : r.fromAvatar;
+        const otherName = isFrom ? (r.toNickname || '对方') : (r.fromNickname || '对方');
+        const otherId = isFrom ? r.toUserId : r.fromUserId;
+        return `
+          <div class="user-card" style="text-align:left; display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <div class="user-card-avatar" style="width:56px; height:56px;">${renderAvatar(otherAvatar, otherName)}</div>
+            <div style="flex:1;">
+              <div style="font-size:14px; color:#d4af37; margin-bottom:4px;">${resolveRelationLabel(r.type)}</div>
+              <div style="font-size:14px; color:#f5f5f5; cursor:pointer;" onclick="showUserPage('${otherId}')">${otherName}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    
+      return `
+        <div class="user-section">
+          <h3>🤝 关系</h3>
+          <div style="display:flex; flex-direction:column; gap:6px;">${items}</div>
+        </div>
+      `;
+    }
+    
+    // 发起关系申请（简易弹窗流程）
+    window.applyRelationship = async function(targetUserId){
+      if (!window.currentUser) {
+        alert('请先登录');
+        return;
+      }
+      if (!targetUserId) return;
+      if (targetUserId === window.currentUser.id) {
+        alert('不能与自己建立关系');
+        return;
+      }
+    
+      const typeInput = prompt('选择关系类型：\n1) Lifelong Relationship\n2) The Best Partner\n3) Sincere Friend\n4) Further Communication');
+      const mapInput = {
+        '1':'lifelong','lifelong':'lifelong',
+        '2':'partner','partner':'partner',
+        '3':'friend','friend':'friend',
+        '4':'communication','communication':'communication'
+      };
+      const relType = mapInput[(typeInput || '').trim().toLowerCase()];
+      if (!relType) {
+        alert('未选择有效的关系类型');
+        return;
+      }
+    
+      const message = prompt('请输入申请留言（必填）：');
+      if (!message || !message.trim()) {
+        alert('申请留言不能为空');
+        return;
+      }
+    
+      if (!window.createRelationshipRequest) {
+        alert('关系功能未加载');
+        return;
+      }
+    
+      const ok = await window.createRelationshipRequest({
+        fromUserId: window.currentUser.id,
+        fromNickname: window.currentUser.nickname,
+        fromAvatar: window.currentUser.avatar || null,
+        toUserId: targetUserId,
+        type: relType,
+        message: message.trim()
+      });
+    
+      if (ok && ok.ok) {
+        alert('申请已发送，等待对方处理');
+      } else {
+        alert(ok.msg || '申请失败');
+      }
+    }
+    
+    // 处理收到的关系申请
+    window.showRelationshipRequests = async function(){
+      if (!window.currentUser) {
+        alert('请先登录');
+        return;
+      }
+      if (!window.getPendingRelationshipRequests || !window.respondRelationship) {
+        alert('关系功能未加载');
+        return;
+      }
+      const list = await window.getPendingRelationshipRequests(window.currentUser.id);
+      if (!list.length) {
+        alert('暂无待处理的关系申请');
+        return;
+      }
+    
+      for (const req of list) {
+        const label = resolveRelationLabel(req.type);
+        const fromName = req.fromNickname || '对方';
+        const msg = req.message || '';
+        const accept = confirm(`${fromName} 想与你建立 ${label}\n留言：${msg}\n\n是否接受？`);
+        const status = accept ? 'accepted' : 'rejected';
+        const ok = await window.respondRelationship(req.id, status);
+        if (ok) {
+          alert(accept ? '已接受' : '已拒绝');
+        } else {
+          alert('处理失败，请重试');
+        }
+      }
+    }
     window.currentViewingUserId = userId; // 保存当前查看的用户ID
     currentModalView = 'profile'; // 切换到详情界面
     await (typeof syncIndex === 'function' ? syncIndex(userId) : Promise.resolve());
@@ -325,6 +456,13 @@
     if (!user) {
       alert('用户不存在');
       return;
+    }
+
+    // 获取关系数据（接受的关系用于展示）
+    let acceptedRelations = [];
+    if (window.getRelationshipsForUser) {
+      const rels = await window.getRelationshipsForUser(userId);
+      acceptedRelations = (rels || []).filter(r => r.status === 'accepted');
     }
 
     const isOwn = window.currentUser && window.currentUser.id === userId;
@@ -364,6 +502,8 @@
 
     const userIdHtml = isAdmin ? `<div style="font-size: 12px; color: #888; margin-top: 5px;">ID: ${userId}</div>` : '';
 
+    const relationHtml = renderRelationshipsSection(acceptedRelations, userId);
+
     const html = `
       <div class="user-header">
         <div class="user-avatar-display">${renderAvatar(user.avatar, user.nickname)}</div>
@@ -372,7 +512,11 @@
           ${userIdHtml}
           <div class="user-badges">${badgesHtml}</div>
         </div>
-        <button class="view-messages-btn" onclick="showUserMessages('${userId}')">📬 查看留言</button>
+        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+          <button class="view-messages-btn" onclick="showUserMessages('${userId}')">📬 查看留言</button>
+          ${!isOwn ? `<button class="view-messages-btn" onclick="applyRelationship('${userId}')">🤝 建立关系</button>` : ''}
+          ${isOwn ? `<button class="view-messages-btn" onclick="showRelationshipRequests()">📨 处理关系申请</button>` : ''}
+        </div>
       </div>
 
       <div class="user-section">
@@ -400,6 +544,8 @@
       ` : ''}
 
       ${styleHtml}
+
+      ${relationHtml}
     `;
 
     document.getElementById('userContent').innerHTML = html;
