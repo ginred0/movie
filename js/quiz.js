@@ -16,6 +16,15 @@
     window.APP_STATE.currentQuestion = 0;
     window.APP_STATE.answers = new Array((window.questions||[]).length).fill('');
     window.APP_STATE.firstAttemptStatus = new Array((window.questions||[]).length).fill(null);
+    
+    // 加载用户已有的徽章（第二次测验时保留已获得的徽章）
+    if (window.currentUser && window.currentUser.badges) {
+      window.APP_STATE.badges = { ...window.currentUser.badges };
+    } else {
+      // 未登录或没有徽章记录，重置为初始状态
+      window.APP_STATE.badges = { oscar: false, cannes: false, berlin: false, venice: false, potato: false };
+    }
+    
     setHidden('guestbookPage', true);
     setHidden('wallPage', true);
     setHidden('quizPage', false);
