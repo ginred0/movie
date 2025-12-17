@@ -330,21 +330,37 @@
     const isOwn = window.currentUser && window.currentUser.id === userId;
     const isAdmin = window.APP_STATE && window.APP_STATE.isAdmin;
 
+    // 徽章显示逻辑
     let badgesHtml = '';
-    if (user.badges) {
-      if (user.badges.oscar) badgesHtml += '<span class="badge-icon-small" title="奥斯卡小金人">🏅</span>';
-      if (user.badges.cannes) badgesHtml += '<span class="badge-icon-small" title="戛纳金棕榈">🌴</span>';
-      if (user.badges.berlin) badgesHtml += '<span class="badge-icon-small" title="柏林金熊">🐻</span>';
-      if (user.badges.venice) badgesHtml += '<span class="badge-icon-small" title="威尼斯金狮">🦁</span>';
-      if (user.badges.potato) badgesHtml += '<span class="badge-icon-small" title="瓦尔达土豆">🥔</span>';
+    let hasBadges = false;
+    if (user.badges && typeof user.badges === 'object') {
+      if (user.badges.oscar) { badgesHtml += '<span class="badge-icon-small" title="奥斯卡小金人">🏅</span>'; hasBadges = true; }
+      if (user.badges.cannes) { badgesHtml += '<span class="badge-icon-small" title="戛纳金棕榈">🌴</span>'; hasBadges = true; }
+      if (user.badges.berlin) { badgesHtml += '<span class="badge-icon-small" title="柏林金熊">🐻</span>'; hasBadges = true; }
+      if (user.badges.venice) { badgesHtml += '<span class="badge-icon-small" title="威尼斯金狮">🦁</span>'; hasBadges = true; }
+      if (user.badges.potato) { badgesHtml += '<span class="badge-icon-small" title="瓦尔达土豆">🥔</span>'; hasBadges = true; }
+    }
+    // 如果没有徽章，显示提示
+    if (!hasBadges) {
+      badgesHtml = '<span style="font-size: 12px; color: #888;">暂无徽章</span>';
     }
 
-    let styleHtml = user.userStyle ? `
+    // 电影风格显示逻辑
+    let styleText = '';
+    if (user.userStyle) {
+      if (typeof user.userStyle === 'object') {
+        styleText = user.userStyle.name || JSON.stringify(user.userStyle);
+      } else if (typeof user.userStyle === 'string' && user.userStyle.trim() !== '') {
+        styleText = user.userStyle;
+      }
+    }
+    
+    let styleHtml = `
       <div class="user-section">
         <h3>🎬 电影风格</h3>
-        <p>${typeof user.userStyle === 'object' ? (user.userStyle.name || JSON.stringify(user.userStyle)) : user.userStyle}</p>
+        <p>${styleText || '<span style="color: #888;">未完成测验</span>'}</p>
       </div>
-    ` : '';
+    `;
 
     const userIdHtml = isAdmin ? `<div style="font-size: 12px; color: #888; margin-top: 5px;">ID: ${userId}</div>` : '';
 
