@@ -397,6 +397,53 @@ body { font-family: 'Lato', sans-serif; background: #000; color: #f5f5f5; overfl
 @media (max-width: 480px) {
   .user-modal { width: 96vw; max-width: 420px; padding: 20px; }
 }
+
+/* 更窄屏下的整体收缩与按钮重排 */
+@media (max-width: 600px) {
+  body { font-size: 15px; }
+
+  /* 顶部入口按钮缩小并贴边 */
+  .user-corner { top: 16px; left: 16px; }
+  .corner-flame, .corner-avatar { width: 54px; height: 54px; }
+  .corner-flame svg, .quiz-icon-button svg, .flame-icon-button svg, .users-icon-button svg { width: 28px; height: 28px; }
+
+  /* 登录下拉宽度自适应 */
+  .user-dropdown { width: 88vw; left: 6vw; top: 80px; max-height: 60vh; }
+  .user-dropdown-body { max-height: 120px; }
+
+  /* 固定角标按钮尺寸与间距 */
+  .quiz-icon-button,
+  .flame-icon-button,
+  .users-icon-button { width: 56px; height: 56px; bottom: 16px; }
+  .quiz-icon-button { right: 16px; }
+  .flame-icon-button { right: 96px; }
+  .users-icon-button { right: 176px; }
+
+  /* 模态框与登录窗缩进 */
+  .modal-content { margin: 40px auto; padding: 28px 22px; width: 90vw; }
+  .login-modal { width: 94vw; padding: 28px 22px; max-height: 88vh; }
+  .auth-form h2, .login-choice h2 { font-size: 26px; }
+  .choice-button { padding: 16px; font-size: 16px; }
+
+  /* 测验与弹窗文案缩放 */
+  .quiz-container { padding: 28px 20px; max-width: 95vw; }
+  .question-text { font-size: 22px; }
+  .answer-input { font-size: 18px; }
+
+  /* 侧边栏占满屏，滑出距离同步缩小 */
+  .sidebar-wall { width: 100vw; right: -100vw; padding: 28px 20px; }
+  .sidebar-wall.active { right: 0; }
+
+  /* 导演滚动文字间距与字号收窄 */
+  .director-row { gap: 28px; padding: 0 16px; margin-bottom: 48px; }
+  .director-name.size-xl { font-size: 26px; }
+  .director-name.size-l { font-size: 20px; }
+  .director-name.size-m { font-size: 16px; }
+  .director-name.size-s { font-size: 13px; }
+
+  /* 网格背景列数减少，避免超小格子 */
+  .film-strip-background { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(6, 1fr); }
+}
 @media (min-width: 1200px) {
   .user-modal { max-width: 640px; }
 }
